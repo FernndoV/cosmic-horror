@@ -1,0 +1,105 @@
+version: 1
+name: generic-cosmic-horror
+language: es
+
+campaign:
+  required:
+    - name
+    - setting
+    - era
+    - location
+    - tone
+    - central_threat
+    - player_objective
+  rules:
+    canonical_facts_are_immutable: true
+    setting_is_not_a_script: true
+    generate_specific_entities_from_setting: true
+
+state:
+  required:
+    - phase
+    - current_location
+    - present_entities
+    - known_facts
+    - discovered_clues
+    - active_objective
+    - unresolved_consequences
+    - tension_clock
+  entity_fields:
+    - id
+    - kind
+    - location
+    - status
+    - properties
+    - relationships
+
+action_interpretation:
+  intents:
+    - observe
+    - investigate
+    - listen
+    - read
+    - speak
+    - move
+    - retreat
+    - use_object
+    - attempt_impossible
+    - wait
+  must_handle:
+    - negation
+    - uncertainty
+    - quoted_speech
+    - multiple_actions
+    - impossible_actions
+  rule: interpret_intent_before_matching_keywords
+
+turn:
+  causal_chain:
+    - player_intent
+    - world_reaction
+    - observable_consequence
+    - state_transition
+    - meaningful_choices
+  narrative:
+    paragraphs: 2
+    language: es
+    avoid:
+      - generic_context_repetition
+      - unestablished_locations
+      - unestablished_objects
+      - arbitrary_character_movements
+      - repeated_metaphors
+      - static_atmosphere_without_change
+
+validation:
+  minimum_scores:
+    coherence: 7
+    atmosphere: 7
+    agency: 7
+  reject_when:
+    - action_is_not_acknowledged
+    - causal_link_is_missing
+    - fact_is_contradicted
+    - entity_appears_without_cause
+    - entity_moves_without_transition
+    - clue_duplicates_known_fact
+    - narrative_repeats_recent_turn
+    - objective_closes_without_resolution
+    - conclusion_introduces_new_main_mystery
+  sanity:
+    prudent_observation_cost: 0
+    interpretable_anomaly_cost: 0
+    confirmed_supernatural_cost: 1
+    intense_horror_cost: 2
+    extreme_horror_cost: 3
+
+progression:
+  phases:
+    opening:
+      establishes: [objective, threat, location, immediate_choice]
+    development:
+      requires_change_in_one_of: [objective, threat, relationship, clue, resource, location]
+    conclusion:
+      requires: [resolved_conflict, resolved_objective, visible_consequence]
+      forbids_new_main_mystery: true
