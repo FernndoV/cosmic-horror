@@ -1,0 +1,1 @@
+CREATE TABLE session_objective (   session_id UUID NOT NULL REFERENCES adventure_session(id) ON DELETE CASCADE,   objective_id VARCHAR(80) NOT NULL,   objective_text VARCHAR(500) NOT NULL,   objective_status VARCHAR(20) NOT NULL,   PRIMARY KEY (session_id, objective_id) );

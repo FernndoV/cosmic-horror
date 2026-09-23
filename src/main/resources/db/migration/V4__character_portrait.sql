@@ -1,0 +1,1 @@
+ALTER TABLE player_character ADD COLUMN portrait_url TEXT;

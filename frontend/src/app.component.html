@@ -1,0 +1,131 @@
+<main>
+  <header class="masthead">
+    <p class="eyebrow">EL UMBRAL INVISIBLE</p>
+    <h1>Horror cósmico</h1>
+    <p>Explora lo imposible. Decide qué estás dispuesto a perder.</p>
+  </header>
+
+  @if (adventure.step() !== 'session') {
+    <nav class="steps" aria-label="Progreso">
+      <button type="button" [class.active]="adventure.step() === 'campaign'" [attr.aria-current]="adventure.step() === 'campaign' ? 'step' : null" (click)="adventure.goTo('campaign')"><span>01</span> Campaña</button>
+      <button type="button" [class.active]="adventure.step() === 'character'" [attr.aria-current]="adventure.step() === 'character' ? 'step' : null" [disabled]="!adventure.campaign()" (click)="adventure.goTo('character')"><span>02</span> Personaje</button>
+      <button type="button" [class.active]="adventure.step() === 'session'" [attr.aria-current]="adventure.step() === 'session' ? 'step' : null" [disabled]="!adventure.session()" (click)="adventure.goTo('session')"><span>03</span> Partida</button>
+    </nav>
+  }
+
+  @if (adventure.step() === 'campaign') {
+    <section class="card setup" aria-labelledby="campaign-title">
+      <div class="section-kicker">ARCHIVO DE CAMPAÑA / 01</div>
+      <h2 id="campaign-title">Prepara el escenario</h2>
+      <p class="muted">Elige el lugar, la época y la tensión que pondrán la historia en marcha.</p>
+      <form (ngSubmit)="adventure.createCampaign(campaignForm, characterForm)">
+        <label for="campaign-name">Nombre</label>
+        <input id="campaign-name" [(ngModel)]="campaignForm.name" name="campaignName" required maxlength="120" placeholder="La casa bajo la marea">
+        <label for="campaign-setting">Ambientación</label>
+        <textarea id="campaign-setting" [(ngModel)]="campaignForm.setting" name="setting" maxlength="2000" placeholder="Una ciudad portuaria donde los sueños llegan con la niebla."></textarea>
+        <div class="form-grid">
+          <div><label for="campaign-era">Época</label><input id="campaign-era" [(ngModel)]="campaignForm.era" name="era" placeholder="Años 20"></div>
+          <div><label for="campaign-location">Localización</label><input id="campaign-location" [(ngModel)]="campaignForm.location" name="location" placeholder="Arkham"></div>
+        </div>
+        <label for="campaign-tone">Tono</label>
+        <input id="campaign-tone" [(ngModel)]="campaignForm.tone" name="tone" placeholder="Opresivo y lento">
+        <button type="submit" [disabled]="adventure.busy() || !campaignForm.name.trim()">{{ adventure.busy() ? 'Creando…' : 'Continuar' }} <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+  }
+
+  @if (adventure.step() === 'character') {
+    <section class="card setup character-setup" aria-labelledby="character-title">
+      <div class="section-kicker">ARCHIVO DE CAMPAÑA / 02</div>
+      <h2 id="character-title">Da forma a tu personaje</h2>
+      <p class="muted">Campaña: <strong>{{ adventure.campaign()?.name }}</strong></p>
+      <div class="portrait-preview" aria-live="polite">
+        <div class="portrait-stage">
+          @if (adventure.portraitPreview(); as portrait) {
+            <button type="button" class="portrait-trigger" (click)="portraitExpanded = true" aria-label="Ampliar retrato del personaje"><img [src]="portrait" [alt]="'Retrato de ' + characterForm.name"></button>
+          } @else {
+            <div class="portrait-placeholder" aria-hidden="true"></div>
+          }
+          @if (adventure.portraitBusy()) { <span class="portrait-status" role="status">Generando retrato…</span> }
+        </div>
+        <h3 class="portrait-name">{{ characterForm.name }}</h3>
+      </div>
+      <form (ngSubmit)="adventure.createCharacter(characterForm)">
+        <label for="character-name">Nombre</label>
+        <input id="character-name" [(ngModel)]="characterForm.name" (ngModelChange)="adventure.markPortraitDirty()" name="characterName" required maxlength="120" placeholder="Evelyn Marsh">
+        <label for="character-concept">Concepto</label>
+        <textarea id="character-concept" [(ngModel)]="characterForm.concept" (ngModelChange)="adventure.markPortraitDirty()" name="concept" maxlength="500" placeholder="Investigadora de archivos, escéptica hasta anoche."></textarea>
+        @if (adventure.portraitError()) { <p class="portrait-error" role="status">{{ adventure.portraitError() }}</p> }
+        <button type="submit" [disabled]="adventure.busy() || !characterForm.name.trim()">{{ adventure.busy() ? 'Preparando la partida…' : 'Comenzar la investigación' }} <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+    @if (portraitExpanded && adventure.portraitPreview(); as enlargedPortrait) {
+      <div class="portrait-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-modal-title" (click)="portraitExpanded = false">
+        <div class="portrait-modal-content" (click)="$event.stopPropagation()"><h2 id="portrait-modal-title" class="sr-only">Retrato ampliado</h2><img [src]="enlargedPortrait" [alt]="'Retrato ampliado de ' + characterForm.name"><button type="button" (click)="portraitExpanded = false">Cerrar</button></div>
+      </div>
+    }
+  }
+
+  @if (adventure.step() === 'session') {
+    @if (adventure.session(); as current) {
+      <section class="layout">
+        <article class="card story" [attr.aria-labelledby]="'story-title'">
+@if (adventure.character()?.portraitUrl) { <figure class="character-portrait"><img [src]="adventure.character()?.portraitUrl" [alt]="'Retrato de ' + adventure.character()?.name"></figure> }          <div class="session-header">
+            <div class="section-kicker">REGISTRO DE SESIÓN / {{ adventure.storyPhase(current.version) }} · TURNO {{ current.version }}</div>
+            <div class="meta" id="story-title">{{ adventure.campaign()?.name }} <span>·</span> {{ adventure.character()?.name }}</div>
+          </div>
+          <div class="story-history" aria-live="polite" aria-atomic="false">
+            @for (paragraph of openingParagraphs(current.openingNarrative); track $index) { <p class="opening">{{ paragraph }}</p> }
+            @for (turn of current.turns; track turn.id) {
+              <div class="turn"><p class="action">Tú decides: {{ turn.action }}</p><p>{{ turn.narrative }}</p></div>
+            }
+          </div>
+          @if (current.storyStatus === "CONCLUDED") {
+            <section class="ending-panel" aria-labelledby="ending-title">
+              <div class="section-kicker">HISTORIA CONCLUIDA</div>
+              <h2 id="ending-title">{{ adventure.endingLabel(current.endingType) }}</h2>
+              <p class="muted">El arco narrativo ha llegado a su desenlace. Puedes revisar el registro completo de la partida.</p>
+            </section>
+          } @else {
+          <section class="action-composer" aria-labelledby="action-title">
+            <div class="section-kicker">TU TURNO</div>
+            <h2 id="action-title">Tu siguiente decisión</h2>
+            <p id="action-help" class="muted">Describe qué hace tu personaje. Puedes investigar, hablar, huir o arriesgarte.</p>
+            <label for="player-action" class="sr-only">Tu siguiente decisión</label>
+            <textarea id="player-action" [(ngModel)]="action" (keydown.enter)="submitFromKeyboard($event)" [disabled]="adventure.busy()" placeholder="¿Qué decide hacer tu personaje?" aria-describedby="action-help"></textarea>
+            <button type="button" (click)="submitAction()" [disabled]="adventure.busy() || !action.trim()">{{ adventure.busy() ? 'Interpretando…' : 'Enviar decisión' }} <span aria-hidden="true">↗</span></button>
+            @if (adventure.busy()) { <p class="loading" role="status">{{ adventure.busyMessage() }}</p> }
+          </section>
+          }
+        </article>
+        <aside class="card status" aria-labelledby="status-title">
+          <div class="section-kicker">ESTADO ACTUAL</div>
+          <h2 id="status-title">Lo que aún sabe</h2>
+          <section class="objective-panel" aria-labelledby="objective-title">
+            <div class="section-kicker">OBJETIVO NARRATIVO</div>
+            <div class="objectives">
+              @for (objective of current.objectives; track objective.id) {
+                <div class="objective"><h3>{{ objective.text }}</h3><p class="objective-status">{{ adventure.objectiveStatusLabel(objective.status) }}</p></div>
+              }
+            </div>
+          </section>
+          <p class="status-label">Salud mental <strong>{{ current.sanity }}/10</strong></p>
+          <div class="meter" role="progressbar" aria-label="Salud mental" [attr.aria-valuenow]="current.sanity" aria-valuemin="0" aria-valuemax="10"><span [style.width.%]="current.sanity * 10"></span></div>
+          <h3>Habilidades</h3>
+          <div class="skills" aria-label="Habilidades del personaje">
+            @for (skill of adventure.skillEntries(); track skill.key) {
+              <div class="skill-row"><span>{{ adventure.skillLabel(skill.key) }}</span><strong>{{ skill.value }}</strong><button type="button" (click)="adventure.rollSkill(skill.key)" [disabled]="adventure.skillCheckBusy()">Tirar 2d6</button></div>
+            }
+          </div>
+          @if (adventure.skillCheck(); as check) {
+            <p class="roll-result" role="status">{{ adventure.skillLabel(check.skill) }}: {{ check.dieOne }} + {{ check.dieTwo }} + {{ check.modifier }} = <strong>{{ check.total }}</strong> · {{ check.success ? "Éxito" : "Fallo" }}</p>
+          }
+          <h3>Pistas</h3>
+          @if (!current.clues.length) { <p class="muted">Aún no has confirmado ninguna pista.</p> }
+          @if (current.clues.length) { <ul class="clues">@for (clue of current.clues; track clue) { <li class="clue"><strong>{{ adventure.clueLabel(clue) }}</strong><small>{{ adventure.clueDescription(clue) }}</small></li> }</ul> }
+        </aside>
+      </section>
+    }
+  }
+  @if (adventure.error()) { <p class="error" role="alert" aria-live="assertive">{{ adventure.error() }}</p> }
+</main>

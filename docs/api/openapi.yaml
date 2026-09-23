@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: Cosmic Horror RPG API
+  version: 0.1.0
+paths:
+  /api/sessions:
+    post:
+      operationId: createSession
+      responses: { '201': { description: Created } }
+  /api/sessions/{sessionId}:
+    get:
+      operationId: getSession
+      parameters: [{ name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: OK }, '404': { description: Not found } }
+  /api/sessions/{sessionId}/turns:
+    post:
+      operationId: submitTurn
+      parameters: [{ name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmitTurnRequest' }
+      responses: { '200': { description: OK }, '409': { description: Conflict } }
+components:
+  schemas:
+    SubmitTurnRequest:
+      type: object
+      required: [requestId, expectedVersion, action]
+      properties:
+        requestId: { type: string, format: uuid }
+        expectedVersion: { type: integer, minimum: 0 }
+        action: { type: string, minLength: 1, maxLength: 2000 }

@@ -1,0 +1,1 @@
+ALTER TABLE player_character ADD COLUMN skills JSONB NOT NULL DEFAULT '{}'::jsonb;

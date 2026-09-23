@@ -1,0 +1,1 @@
+ALTER TABLE adventure_session ADD COLUMN opening_narrative TEXT NOT NULL DEFAULT 'La noche comienza sin dejar rastro.';

@@ -1,0 +1,1 @@
+ALTER TABLE adventure_session ADD COLUMN objective VARCHAR(500) NOT NULL DEFAULT 'Comprender la amenaza y decidir qué precio aceptar.'; ALTER TABLE adventure_session ADD COLUMN objective_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
