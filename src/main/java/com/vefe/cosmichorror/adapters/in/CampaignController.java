@@ -23,7 +23,8 @@ public class CampaignController {
   public ResponseEntity<ApiResponseMapper.CampaignResponse> create(
       @Valid @RequestBody CreateCampaignRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseMapper.campaign(
-        service.create(request.name(), request.setting(), request.era(), request.location(), request.tone())));
+        service.create(request.name(), request.setting(), request.era(), request.location(), request.tone(),
+            request.centralThreat(), request.playerObjective())));
   }
 
   @GetMapping("/{id}")
@@ -36,6 +37,8 @@ public class CampaignController {
       @Size(max = 2000) String setting,
       @Size(max = 120) String era,
       @Size(max = 200) String location,
-      @Size(max = 120) String tone) {}
+      @Size(max = 120) String tone,
+      @Size(max = 500) String centralThreat,
+      @Size(max = 500) String playerObjective) {}
 }
 

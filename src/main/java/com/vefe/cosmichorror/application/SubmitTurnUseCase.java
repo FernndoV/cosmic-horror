@@ -4,6 +4,8 @@ import com.vefe.cosmichorror.domain.AdventureSession;
 import com.vefe.cosmichorror.domain.Campaign;
 import com.vefe.cosmichorror.domain.NarrativeGenerationPort;
 import com.vefe.cosmichorror.domain.NarrativeProposal;
+import com.vefe.cosmichorror.domain.NarrativeProposalValidator;
+import com.vefe.cosmichorror.domain.NarrativeState;
 import com.vefe.cosmichorror.domain.PlayerCharacter;
 import com.vefe.cosmichorror.domain.Turn;
 import java.util.Optional;
@@ -15,6 +17,7 @@ public final class SubmitTurnUseCase {
   private final Optional<CampaignRepository> campaigns;
   private final Optional<CharacterRepository> characters;
   private final SessionProgressionPolicy progressionPolicy;
+  private final NarrativeProposalValidator proposalValidator = new NarrativeProposalValidator();
 
   public SubmitTurnUseCase(SessionRepository repository, NarrativeGenerationPort narrative,
       CampaignRepository campaigns, CharacterRepository characters,
@@ -41,10 +44,12 @@ public final class SubmitTurnUseCase {
     PlayerCharacter character = session.characterId() == null ? null
         : characters.flatMap(repositoryPort -> repositoryPort.find(session.characterId())).orElse(null);
 
+    NarrativeState state = NarrativeState.initial(campaign, session.objective(), session.clues());
     NarrativeProposal proposal = narrative.generate(new com.vefe.cosmichorror.domain.NarrativeRequest(
         id, action, session.sanity(), session.clues(), campaign, character,
-        session.openingNarrative(), session.turns()));
+        session.openingNarrative(), session.turns(), state, null));
     proposal = progressionPolicy.apply(proposal, action, session.version());
+    proposal = proposalValidator.validate(proposal, state);
 
     int previousVersion = session.version();
     Turn turn = session.apply(requestId, action, proposal, expectedVersion);

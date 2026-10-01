@@ -10,7 +10,7 @@ public final class SessionProgressionPolicy {
 
   public NarrativeProposal apply(NarrativeProposal proposal, String action, int version) {
     if (proposal == null || proposal.concluded() || (version < 5 && !isClosureIntent(action, version))) return proposal;
-    return new NarrativeProposal(proposal.narrative() + "\n\n" + FORCED_CONCLUSION, proposal.clue(), proposal.sanityCost(), "CONCLUDED", "AMBIGUOUS", null, "RESOLVED", null);
+    return new NarrativeProposal(proposal.narrative() + "\n\n" + FORCED_CONCLUSION, proposal.clue(), proposal.sanityCost(), "CONCLUDED", "AMBIGUOUS", null, "RESOLVED", proposal.objectives(), proposal.transition());
   }
 
   private boolean isClosureIntent(String action, int version) {

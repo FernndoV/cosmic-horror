@@ -1,4 +1,8 @@
-version: 1
+version: 2
+contract_id: cosmic-horror-narrative
+compatibility:
+  previous_versions: [1]
+  breaking_changes: false
 name: generic-cosmic-horror
 language: es
 
@@ -35,6 +39,12 @@ state:
     - relationships
 
 action_interpretation:
+  output:
+    - raw_text
+    - primary_intent
+    - negated
+    - uncertain
+    - clauses
   intents:
     - observe
     - investigate
@@ -72,6 +82,24 @@ turn:
       - repeated_metaphors
       - static_atmosphere_without_change
 
+transition:
+  required_fields:
+    - from_location
+    - to_location
+    - established_facts
+    - discovered_clues
+    - resolved_consequences
+    - introduced_entities
+    - removed_entity_ids
+    - tension_delta
+    - cause
+  rules:
+    from_location_must_equal_state: true
+    new_location_requires_location_fact: true
+    introduced_entity_requires_cause: true
+    tension_delta_range: [-3, 3]
+    provider_may_omit_transition: true
+
 validation:
   minimum_scores:
     coherence: 7
@@ -87,6 +115,9 @@ validation:
     - narrative_repeats_recent_turn
     - objective_closes_without_resolution
     - conclusion_introduces_new_main_mystery
+    - negated_action_is_executed
+    - transition_starts_from_wrong_location
+    - transition_introduces_unestablished_location
   sanity:
     prudent_observation_cost: 0
     interpretable_anomaly_cost: 0

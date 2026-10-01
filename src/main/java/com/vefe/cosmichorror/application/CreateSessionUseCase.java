@@ -3,6 +3,7 @@ package com.vefe.cosmichorror.application;
 import com.vefe.cosmichorror.domain.AdventureSession;
 import com.vefe.cosmichorror.domain.Campaign;
 import com.vefe.cosmichorror.domain.NarrativeGenerationPort;
+import com.vefe.cosmichorror.domain.NarrativeState;
 import com.vefe.cosmichorror.domain.PlayerCharacter;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,10 +30,11 @@ public final class CreateSessionUseCase {
     }
 
     String opening = DEFAULT_OPENING;
+    Campaign campaign = null;
     if (campaignId != null) {
       CampaignRepository campaignRepository = campaigns.orElseThrow(InvalidSessionConfigurationException::new);
       CharacterRepository characterRepository = characters.orElseThrow(InvalidSessionConfigurationException::new);
-      Campaign campaign = campaignRepository.find(campaignId).orElseThrow(CampaignNotFoundException::new);
+      campaign = campaignRepository.find(campaignId).orElseThrow(CampaignNotFoundException::new);
       PlayerCharacter character = characterRepository.find(characterId)
           .orElseThrow(CharacterNotFoundException::new);
       if (!campaign.id().equals(character.campaignId())) {
@@ -41,7 +43,8 @@ public final class CreateSessionUseCase {
       opening = narrative.generateOpening(campaign, character);
     }
 
-    AdventureSession session = AdventureSession.start(UUID.randomUUID(), campaignId, characterId, opening);
+    AdventureSession session = AdventureSession.start(UUID.randomUUID(), campaignId, characterId, opening,
+        NarrativeState.initial(campaign, campaign == null ? null : campaign.playerObjective(), java.util.Set.of()));
     repository.save(session);
     return SessionViewMapper.toView(session);
   }

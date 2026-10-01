@@ -14,7 +14,7 @@ final class ApiResponseMapper {
 
   static CampaignResponse campaign(Campaign campaign) {
     return new CampaignResponse(campaign.id(), campaign.name(), campaign.setting(), campaign.era(),
-        campaign.location(), campaign.tone());
+        campaign.location(), campaign.tone(), campaign.centralThreat(), campaign.playerObjective());
   }
 
   static CharacterResponse character(PlayerCharacter character) {
@@ -33,7 +33,8 @@ final class ApiResponseMapper {
     return new TurnResponse(sessionId, turn, session(state));
   }
 
-  record CampaignResponse(UUID id, String name, String setting, String era, String location, String tone) {}
+  record CampaignResponse(UUID id, String name, String setting, String era, String location, String tone,
+      String centralThreat, String playerObjective) {}
 
   record CharacterResponse(UUID id, UUID campaignId, String name, String concept,
       String portraitUrl, java.util.Map<String, Integer> skills) {}

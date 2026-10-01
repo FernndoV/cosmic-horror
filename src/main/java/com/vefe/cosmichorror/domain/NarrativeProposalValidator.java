@@ -10,6 +10,10 @@ public final class NarrativeProposalValidator {
   private static final Pattern CLUE_ID = Pattern.compile("[a-z0-9][a-z0-9_-]{0,79}");
 
   public NarrativeProposal validate(NarrativeProposal proposal) {
+    return validate(proposal, null);
+  }
+
+  public NarrativeProposal validate(NarrativeProposal proposal, NarrativeState state) {
     if (proposal == null) throw new IllegalStateException("La propuesta narrativa es nula");
 
     String narrative = proposal.narrative() == null ? "" : proposal.narrative().trim();
@@ -20,13 +24,16 @@ public final class NarrativeProposalValidator {
     int sanityCost = Math.max(0, Math.min(proposal.sanityCost(), 3));
 
     NarrativeProposal normalized = new NarrativeProposal(narrative, clue, sanityCost, storyStatus,
-        endingType, proposal.objective(), objectiveStatus, proposal.objectives());
+        endingType, proposal.objective(), objectiveStatus, proposal.objectives(), proposal.transition());
 
     if (!normalized.valid() || !STORY_STATUSES.contains(storyStatus)
         || (endingType != null && !ENDING_TYPES.contains(endingType))
         || !OBJECTIVE_STATUSES.contains(objectiveStatus)
         || (clue != null && !CLUE_ID.matcher(clue).matches())) {
       throw new IllegalStateException("La propuesta narrativa no cumple el contrato");
+    }
+    if (state != null && normalized.transition() != null) {
+      new NarrativeTransitionValidator().validate(state, normalized.transition());
     }
     return normalized;
   }
